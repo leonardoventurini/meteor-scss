@@ -1,8 +1,8 @@
 Package.describe({
   summary: 'Style with attitude. Sass and SCSS support for Meteor.js.',
-  version: '4.15.0',
-  git: 'https://github.com/fourseven/meteor-scss.git',
-  name: 'fourseven:scss',
+  version: '1.0.0',
+  git: 'https://github.com/leonardoventurini/meteor-scss.git',
+  name: 'leonardoventurini:scss',
 });
 
 Package.registerBuildPlugin({
@@ -22,7 +22,7 @@ Package.onUse(function(api) {
 Package.onTest(function(api) {
   api.use(['test-helpers', 'tinytest']);
 
-  api.use(['fourseven:scss']);
+  api.use(['leonardoventurini:scss']);
 
   // Tests for .scss
   api.addFiles([

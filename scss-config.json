@@ -1,5 +1,5 @@
 {
   "includePaths": [
-    "{local-test:fourseven:scss}/test/include-paths/modules/module"
+    "{local-test:leonardoventurini:scss}/test/include-paths/modules/module"
   ]
 }

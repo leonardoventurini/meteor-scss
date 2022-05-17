@@ -9,4 +9,4 @@ This plugin is only concerned with the first step: compilation of scss to css. T
 
 `meteor` version:
 
-`fourseven:scss` version:
+`leonardoventurini:scss` version:
