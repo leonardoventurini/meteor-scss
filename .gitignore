@@ -5,3 +5,4 @@ meteor/
 .build*
 .idea
 .npm
+node_modules
