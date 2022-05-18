@@ -1,16 +1,15 @@
 import { getRealImportPathFromIncludes } from './get-real-import-path-from-includes'
 import { convertToStandardPath } from './convert-to-standard-path'
 import sass from 'sass'
-import { promisify } from 'util'
+import { Meteor } from 'meteor/meteor'
 import { decodeFilePath } from './decode-file-path'
 import { fileExists } from './file-exists'
 
 const fs = Plugin.fs
 const path = Plugin.path
 
-const compileSass = promisify(sass.render)
-
 const rootDir = convertToStandardPath((process.env.PWD || process.cwd()) + '/')
+const compile = Meteor.wrapAsync(sass.render)
 
 export class SassCompiler extends MultiFileCachingCompiler {
   constructor() {
@@ -66,7 +65,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
     )
   }
 
-  async compileOneFile(inputFile, allFiles) {
+  compileOneFile(inputFile, allFiles) {
     const referencedImportPaths = []
 
     var totalImportPath = []
@@ -152,7 +151,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
         // iterate backwards over totalImportPath and remove paths that don't equal the prev url
         for (let i = totalImportPath.length - 1; i >= 0; i--) {
           // check if importPath contains prev, if it doesn't, remove it. Up until we find a path that does contain it
-          if (totalImportPath[i] == prev) {
+          if (totalImportPath[i] === prev) {
             break
           } else {
             // remove last item (which has to be item i because we are iterating backwards)
@@ -240,11 +239,9 @@ export class SassCompiler extends MultiFileCachingCompiler {
 
     options.file = this.getAbsoluteImportPath(inputFile)
 
-    console.log(options.file)
-
     options.data = inputFile.getContentsAsBuffer().toString('utf8')
 
-    //If the file is empty, options.data is an empty string
+    // If the file is empty, options.data is an empty string
     // In that case options.file will be used by node-sass,
     // which it can not read since it will contain a meteor package or app reference '{}'
     // This is one workaround, another one would be to not set options.file, in which case the importer 'prev' will be 'stdin'
@@ -257,7 +254,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
     let output
 
     try {
-      output = await compileSass(options)
+      output = compile(options)
     } catch (e) {
       inputFile.error({
         message: `Scss compiler error: ${e.formatted}\n`,
