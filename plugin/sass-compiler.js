@@ -2,8 +2,14 @@ import { getRealImportPathFromIncludes } from './get-real-import-path-from-inclu
 import { convertToStandardPath } from './convert-to-standard-path'
 import sass from 'sass'
 import { decodeFilePath } from './decode-file-path'
-import { fileExists } from './file-exists'
-import { replacePackagePaths } from './replace-package-paths'
+import {
+  decodePath,
+  encodePath,
+  replacePackagePaths,
+} from './replace-package-paths'
+import { fixTilde } from './fix-tilde'
+import { getRealImportPath } from './get-real-import-path'
+import { hasUnderscore } from './has-underscore'
 
 const fs = Plugin.fs
 const path = Plugin.path
@@ -40,11 +46,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
     }
 
     const pathInPackage = inputFile.getPathInPackage()
-    return !this.hasUnderscore(pathInPackage)
-  }
-
-  hasUnderscore(file) {
-    return path.basename(file).startsWith('_')
+    return !hasUnderscore(pathInPackage)
   }
 
   compileOneFileLater(inputFile, getResult) {
@@ -70,79 +72,11 @@ export class SassCompiler extends MultiFileCachingCompiler {
     var totalImportPath = []
     var sourceMapPaths = [`.${inputFile.getDisplayPath()}`]
 
-    const addUnderscore = file => {
-      if (!this.hasUnderscore(file)) {
-        file = path.join(path.dirname(file), `_${path.basename(file)}`)
-      }
-      return file
-    }
-
-    const getRealImportPath = importPath => {
-      const isAbsolute = importPath.startsWith('/')
-
-      //SASS has a whole range of possible import files from one import statement, try each of them
-      const possibleFiles = []
-
-      //If the referenced file has no extension, try possible extensions, starting with extension of the parent file.
-      let possibleExtensions = ['scss', 'sass', 'css']
-
-      if (!importPath.match(/\.s?(a|c)ss$/)) {
-        possibleExtensions = [
-          inputFile.getExtension(),
-          ...possibleExtensions.filter(e => e !== inputFile.getExtension()),
-        ]
-        for (const extension of possibleExtensions) {
-          possibleFiles.push(`${importPath}.${extension}`)
-        }
-      } else {
-        possibleFiles.push(importPath)
-      }
-
-      //Try files prefixed with underscore
-      for (const possibleFile of possibleFiles) {
-        if (!this.hasUnderscore(possibleFile)) {
-          possibleFiles.push(addUnderscore(possibleFile))
-        }
-      }
-
-      //Try if one of the possible files exists
-      for (const possibleFile of possibleFiles) {
-        if (
-          (isAbsolute && fileExists(possibleFile)) ||
-          (!isAbsolute && allFiles.has(possibleFile))
-        ) {
-          return { absolute: isAbsolute, path: possibleFile }
-        }
-      }
-      //Nothing found...
-      return null
-    }
-
-    const fixTilde = function (thePath) {
-      let newPath = thePath
-      // replace ~ with {}/....
-      if (newPath.startsWith('~')) {
-        newPath = newPath.replace('~', '{}/node_modules/')
-      }
-
-      // add {}/ if starts with node_modules
-      if (!newPath.startsWith('{')) {
-        if (newPath.startsWith('node_modules')) {
-          newPath = '{}/' + newPath
-        }
-        if (newPath.startsWith('/node_modules')) {
-          newPath = '{}' + newPath
-        }
-      }
-
-      return newPath
-    }
+    const parentMap = new Map()
 
     //Handle import statements found by the sass compiler, used to handle cross-package imports
     const importer = function (url, prev) {
-      console.warn({ url, prev })
-
-      prev = convertToStandardPath(prev)
+      prev = convertToStandardPath(decodePath(prev))
       prev = fixTilde(prev)
 
       if (!totalImportPath.length) {
@@ -161,7 +95,8 @@ export class SassCompiler extends MultiFileCachingCompiler {
           }
         }
       }
-      let importPath = convertToStandardPath(url)
+
+      let importPath = convertToStandardPath(decodePath(url))
 
       importPath = fixTilde(importPath)
 
@@ -193,20 +128,27 @@ export class SassCompiler extends MultiFileCachingCompiler {
         }
       }
 
+      const _getRealImportPath = getRealImportPath(
+        inputFile,
+        totalImportPath,
+        allFiles,
+      )
+
       try {
-        let parsed = getRealImportPath(importPath)
+        let parsed = _getRealImportPath(importPath)
 
         if (!parsed) {
-          parsed = getRealImportPathFromIncludes(url, getRealImportPath)
+          parsed = getRealImportPathFromIncludes(
+            decodePath(url),
+            _getRealImportPath,
+          )
         }
+
+        if (parsed) parentMap.set(parsed.path, prev)
 
         if (!parsed) {
           //Nothing found...
-          throw new Error(
-            `File to import: ${url} not found in file: ${
-              totalImportPath[totalImportPath.length - 2]
-            }`,
-          )
+          throw new Error(`File to import: ${url} not found in file: ${prev}`)
         }
 
         totalImportPath.push(parsed.path)
@@ -215,12 +157,14 @@ export class SassCompiler extends MultiFileCachingCompiler {
           sourceMapPaths.push(parsed.path)
           return {
             contents: fs.readFileSync(parsed.path, 'utf8'),
+            file: encodePath(parsed.path),
           }
         } else {
           referencedImportPaths.push(parsed.path)
           sourceMapPaths.push(decodeFilePath(parsed.path))
           return {
             contents: allFiles.get(parsed.path).getContentsAsString(),
+            file: encodePath(parsed.path),
           }
         }
       } catch (e) {

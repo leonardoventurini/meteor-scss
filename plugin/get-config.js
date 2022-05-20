@@ -1,7 +1,6 @@
 import { fileExists } from './file-exists'
-
-const fs = Plugin.fs
-const path = Plugin.path
+import fs from 'fs'
+import path from 'path'
 
 /**
  * Build a path from current process working directory (i.e. meteor project
@@ -11,17 +10,19 @@ const path = Plugin.path
  * @private
  */
 export function getConfig(configFileName) {
-  const appdir = process.env.PWD || process.cwd()
-  const custom_config_filename = path.join(appdir, configFileName)
-  let userConfig = {}
+  const appDir = process.env.PWD || process.cwd()
 
-  if (fileExists(custom_config_filename)) {
-    userConfig = fs.readFileSync(custom_config_filename, {
-      encoding: 'utf8',
-    })
-    userConfig = JSON.parse(userConfig)
-  } else {
-    //console.warn('Could not find configuration file at ' + custom_config_filename);
+  const possiblePaths = [path.join(appDir, configFileName)]
+
+  for (const possiblePath of possiblePaths) {
+    if (fileExists(possiblePath)) {
+      const content = fs.readFileSync(possiblePath, {
+        encoding: 'utf8',
+      })
+
+      return JSON.parse(content)
+    }
   }
-  return userConfig
+
+  return {}
 }
