@@ -1,15 +1,14 @@
 import { getRealImportPathFromIncludes } from './get-real-import-path-from-includes'
 import { convertToStandardPath } from './convert-to-standard-path'
 import sass from 'sass'
-import { Meteor } from 'meteor/meteor'
 import { decodeFilePath } from './decode-file-path'
 import { fileExists } from './file-exists'
+import { replacePackagePaths } from './replace-package-paths'
 
 const fs = Plugin.fs
 const path = Plugin.path
 
 const rootDir = convertToStandardPath((process.env.PWD || process.cwd()) + '/')
-const compile = Meteor.wrapAsync(sass.render)
 
 export class SassCompiler extends MultiFileCachingCompiler {
   constructor() {
@@ -140,9 +139,12 @@ export class SassCompiler extends MultiFileCachingCompiler {
     }
 
     //Handle import statements found by the sass compiler, used to handle cross-package imports
-    const importer = function (url, prev, done) {
+    const importer = function (url, prev) {
+      console.warn({ url, prev })
+
       prev = convertToStandardPath(prev)
       prev = fixTilde(prev)
+
       if (!totalImportPath.length) {
         totalImportPath.push(prev)
       }
@@ -160,7 +162,9 @@ export class SassCompiler extends MultiFileCachingCompiler {
         }
       }
       let importPath = convertToStandardPath(url)
+
       importPath = fixTilde(importPath)
+
       for (let i = totalImportPath.length - 1; i >= 0; i--) {
         if (importPath.startsWith('/') || importPath.startsWith('{')) {
           break
@@ -170,6 +174,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
       }
 
       let accPosition = importPath.indexOf('{')
+
       if (accPosition > -1) {
         importPath = importPath.substr(accPosition, importPath.length)
       }
@@ -190,9 +195,11 @@ export class SassCompiler extends MultiFileCachingCompiler {
 
       try {
         let parsed = getRealImportPath(importPath)
+
         if (!parsed) {
           parsed = getRealImportPathFromIncludes(url, getRealImportPath)
         }
+
         if (!parsed) {
           //Nothing found...
           throw new Error(
@@ -201,28 +208,26 @@ export class SassCompiler extends MultiFileCachingCompiler {
             }`,
           )
         }
+
         totalImportPath.push(parsed.path)
 
         if (parsed.absolute) {
           sourceMapPaths.push(parsed.path)
-          done({
+          return {
             contents: fs.readFileSync(parsed.path, 'utf8'),
-            file: parsed.path,
-          })
+          }
         } else {
           referencedImportPaths.push(parsed.path)
           sourceMapPaths.push(decodeFilePath(parsed.path))
-          done({
+          return {
             contents: allFiles.get(parsed.path).getContentsAsString(),
-            file: parsed.path,
-          })
+          }
         }
       } catch (e) {
-        return done(e)
+        return e
       }
     }
 
-    //Start compile sass (async)
     const options = {
       sourceMap: true,
       sourceMapContents: true,
@@ -241,6 +246,8 @@ export class SassCompiler extends MultiFileCachingCompiler {
 
     options.data = inputFile.getContentsAsBuffer().toString('utf8')
 
+    options.data = replacePackagePaths(options.data)
+
     // If the file is empty, options.data is an empty string
     // In that case options.file will be used by node-sass,
     // which it can not read since it will contain a meteor package or app reference '{}'
@@ -254,12 +261,13 @@ export class SassCompiler extends MultiFileCachingCompiler {
     let output
 
     try {
-      output = compile(options)
+      output = sass.renderSync(options)
     } catch (e) {
       inputFile.error({
-        message: `Scss compiler error: ${e.formatted}\n`,
+        message: `SASS Compiler Error: ${e.formatted}\n`,
         sourcePath: inputFile.getDisplayPath(),
       })
+      console.error(e)
       return null
     }
     //End compile sass
