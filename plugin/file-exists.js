@@ -1,4 +1,4 @@
-const fs = Plugin.fs
+import fs from 'fs'
 
 export function fileExists(file) {
   if (fs.statSync) {

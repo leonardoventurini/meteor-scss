@@ -1,6 +1,6 @@
 import { getConfig } from './get-config'
 
-const path = Plugin.path
+import path from 'path'
 
 const { includePaths } = getConfig('scss-config.json')
 
