@@ -1,5 +1,5 @@
 Package.describe({
-  summary: 'Style with attitude. Sass and SCSS support for Meteor.js.',
+  summary: 'Sass and SCSS support for Meteor. Supports M1 CPUs.',
   version: '1.0.1',
   git: 'https://github.com/leonardoventurini/meteor-scss.git',
   name: 'leonardoventurini:scss',
@@ -7,7 +7,7 @@ Package.describe({
 
 Package.registerBuildPlugin({
   name: 'compileScssBatch',
-  use: ['caching-compiler@1.2.2', 'ecmascript@0.15.1'],
+  use: ['caching-compiler', 'ecmascript'],
   sources: ['plugin/compile-scss.js'],
   npmDependencies: {
     sass: '1.51.0',
@@ -20,9 +20,7 @@ Package.onUse(function (api) {
 })
 
 Package.onTest(function (api) {
-  api.use(['test-helpers', 'tinytest'])
-
-  api.use(['leonardoventurini:scss'])
+  api.use(['ecmascript', 'leonardoventurini:scss', 'meteortesting:mocha'])
 
   // Tests for .scss
   api.addFiles([

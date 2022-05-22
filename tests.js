@@ -1,55 +1,58 @@
-Tinytest.add("sass/scss - imports", function (test) {
-  var div = document.createElement('div');
-  document.body.appendChild(div);
+import { assert } from 'chai'
 
-  var prefixes = ['scss'];
+function getStyle(element, property) {
+  const compStyles = getComputedStyle(element)
 
-  try {
-    var t = function (className, style) {
-      prefixes.forEach(function(prefix){
-        div.className = prefix + '-' + className;
+  return compStyles[property]
+}
 
-        // Read 'border-top-style' instead of 'border-style' (which is set
-        // by the stylesheet) because only the individual styles are computed
-        // and can be retrieved. Trying to read the synthetic 'border-style'
-        // gives an empty string.
-        test.equal(getStyleProperty(div, 'border-top-style'), style,  div.className);
-      });
+describe('Meteor Sass', () => {
+  it('should import correctly', function () {
+    const div = document.createElement('div')
 
-    };
-    t('el1', 'dotted');
-    t('el2', 'dashed');
-    t('el3', 'solid');
-    t('el4', 'double');
-    t('el5', 'groove');
-    t('el6', 'inset');
+    document.body.appendChild(div)
 
-    // This is assigned to 'ridge' in not-included.s(a|c)ss, which is ... not
-    // included. So that's why it should be 'none'.  (This tests that we don't
-    // process non-main files.)
-    t('el0', 'none');
-  } finally {
-    document.body.removeChild(div);
-  }
-});
+    const prefixes = ['scss']
 
+    try {
+      const test = function (className, style) {
+        prefixes.forEach(function (prefix) {
+          div.className = prefix + '-' + className
 
-Tinytest.add('sass/scss - import from includePaths', function (test) {
+          // Read 'border-top-style' instead of 'border-style' (which is set
+          // by the stylesheet) because only the individual styles are computed
+          // and can be retrieved. Trying to read the synthetic 'border-style'
+          // gives an empty string.
+          assert.equal(getStyle(div, 'borderTopStyle'), style, div.className)
+        })
+      }
+      test('el1', 'dotted')
+      test('el2', 'dashed')
+      test('el3', 'solid')
+      test('el4', 'double')
+      test('el5', 'groove')
+      test('el6', 'inset')
 
-  var div = document.createElement('div');
+      // This is assigned to 'ridge' in not-included.s(a|c)ss, which is ... not
+      // included. So that's why it should be 'none'.  (This tests that we don't
+      // process non-main files.)
+      test('el0', 'none')
+    } finally {
+      document.body.removeChild(div)
+    }
+  })
 
-  document.body.appendChild(div);
+  it('should import from included paths correctly', function () {
+    const div = document.createElement('div')
 
-  try {
+    document.body.appendChild(div)
 
-    div.className = 'from-include-paths';
+    try {
+      div.className = 'from-include-paths'
 
-    test.equal(getStyleProperty(div, 'border-bottom-style'), 'outset',  div.className);
-
-  } finally {
-
-    document.body.removeChild(div);
-
-  }
-
-});
+      assert.equal(getStyle(div, 'borderBottomStyle'), 'outset', div.className)
+    } finally {
+      document.body.removeChild(div)
+    }
+  })
+})
