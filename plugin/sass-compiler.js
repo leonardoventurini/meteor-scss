@@ -57,7 +57,6 @@ export class SassCompiler extends MultiFileCachingCompiler {
   }
 
   compileOneFile(inputFile, allFiles) {
-    console.time('compileOneFile')
     const referencedImportPaths = []
 
     const sourceMapPaths = [`.${inputFile.getDisplayPath()}`]
@@ -126,8 +125,6 @@ export class SassCompiler extends MultiFileCachingCompiler {
       css: output.css.toString('utf-8'),
       sourceMap: output.map,
     }
-
-    console.timeEnd('compileOneFile')
 
     return { compileResult, referencedImportPaths }
   }
