@@ -108,7 +108,6 @@ export class SassCompiler extends MultiFileCachingCompiler {
         message: `SASS Compiler Error: ${e.formatted}\n`,
         sourcePath: inputFile.getDisplayPath(),
       })
-      console.error(e)
       return null
     }
     //End compile sass
