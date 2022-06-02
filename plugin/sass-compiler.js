@@ -81,6 +81,7 @@ export class SassCompiler extends MultiFileCachingCompiler {
       importer,
       includePaths: [],
       precision: 10,
+      quietDeps: true,
     }
 
     options.file = this.getAbsoluteImportPath(inputFile)
