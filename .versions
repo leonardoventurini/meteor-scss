@@ -8,8 +8,8 @@ ecmascript-runtime-client@0.12.1
 ecmascript-runtime-server@0.11.0
 fetch@0.1.1
 inter-process-messaging@0.1.1
-leonardoventurini:scss@1.0.3
-local-test:leonardoventurini:scss@1.0.3
+leonardoventurini:scss@1.0.4
+local-test:leonardoventurini:scss@1.0.4
 meteor@1.10.0
 meteortesting:browser-tests@0.1.2
 meteortesting:mocha@0.4.4
