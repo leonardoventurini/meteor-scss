@@ -1,13 +1,13 @@
 Package.describe({
   summary: 'Sass and SCSS support for Meteor. Supports M1 CPUs.',
-  version: '1.0.4',
+  version: '1.1.0',
   git: 'https://github.com/leonardoventurini/meteor-scss.git',
   name: 'leonardoventurini:scss',
 })
 
 Package.registerBuildPlugin({
   name: 'compileScssBatch',
-  use: ['caching-compiler@1.2.2', 'ecmascript@0.15.1'],
+  use: ['caching-compiler', 'ecmascript'],
   sources: ['plugin/compile-scss.js'],
   npmDependencies: {
     sass: '1.51.0',
@@ -15,7 +15,7 @@ Package.registerBuildPlugin({
 })
 
 Package.onUse(function (api) {
-  api.versionsFrom('2.3')
+  api.versionsFrom(['2.3', '3.0-rc.1'])
   api.use('isobuild:compiler-plugin@1.0.0')
 })
 

@@ -6,3 +6,4 @@ meteor/
 .idea
 .npm
 node_modules
+.meteor
