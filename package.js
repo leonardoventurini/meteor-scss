@@ -20,7 +20,7 @@ Package.onUse(function (api) {
 })
 
 Package.onTest(function (api) {
-  api.use(['ecmascript', 'leonardoventurini:scss', 'meteortesting:mocha'])
+  api.use(['ecmascript', 'leonardoventurini:scss', 'meteortesting:mocha@3.0.3-beta300.0'])
 
   // Tests for .scss
   api.addFiles([
