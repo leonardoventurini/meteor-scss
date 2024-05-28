@@ -10,8 +10,8 @@ ecmascript-runtime-server@0.11.1-rc300.2
 fetch@0.1.5-rc300.2
 http@1.0.1
 inter-process-messaging@0.1.2-rc300.2
-leonardoventurini:scss@1.1.2
-local-test:leonardoventurini:scss@1.1.2
+leonardoventurini:scss@2.0.0
+local-test:leonardoventurini:scss@2.0.0
 meteor@2.0.0-rc300.2
 meteortesting:browser-tests@1.6.0
 meteortesting:mocha@3.1.0-beta300.0
