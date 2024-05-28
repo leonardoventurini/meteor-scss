@@ -44,15 +44,15 @@ export class SassCompiler extends MultiFileCachingCompiler {
       {
         path: inputFile.getPathInPackage(),
       },
-      async () => {
-        const result = await getResult()
-        return (
+      () => new Promise((resolve) => {
+        const result = getResult()
+        resolve(
           result && {
             data: result.css,
             sourceMap: result.sourceMap,
           }
         )
-      },
+      }),
     )
   }
 
