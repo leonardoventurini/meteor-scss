@@ -44,8 +44,8 @@ export class SassCompiler extends MultiFileCachingCompiler {
       {
         path: inputFile.getPathInPackage(),
       },
-      async () => {
-        const result = await getResult()
+      () => {
+        const result = getResult()
         return (
           result && {
             data: result.css,
