@@ -1,6 +1,6 @@
 Package.describe({
   summary: 'Sass and SCSS support for Meteor. Supports M1 CPUs.',
-  version: '1.1.2',
+  version: '1.1.3',
   git: 'https://github.com/leonardoventurini/meteor-scss.git',
   name: 'leonardoventurini:scss',
 })
